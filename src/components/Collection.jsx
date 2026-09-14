@@ -45,7 +45,7 @@ export default function Collection() {
                 <button
                   type="button"
                   onClick={() => add(p)}
-                  className="mt-4 text-[11px] font-medium tracking-[0.2em] uppercase text-ink underline decoration-ink/30 underline-offset-4 transition-colors hover:decoration-ink"
+                  className="mt-4 min-h-11 text-[11px] font-medium tracking-[0.2em] uppercase text-ink underline decoration-ink/30 underline-offset-4 transition-colors hover:decoration-ink"
                 >
                   Add to cart
                 </button>

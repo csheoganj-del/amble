@@ -5,7 +5,7 @@ export default function Marquee() {
   const doubled = [...row, ...row]
 
   return (
-    <div className="relative z-20 overflow-hidden border-t border-ink/10 md:absolute md:inset-x-0 md:bottom-0">
+    <div className="absolute inset-x-0 bottom-0 z-20 overflow-hidden border-t border-ink/10 pb-[env(safe-area-inset-bottom)]">
       <div className="marquee-track flex w-max items-center gap-0 py-2.5 whitespace-nowrap">
         {doubled.map((item, i) => (
           <span

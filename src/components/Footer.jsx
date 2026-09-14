@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <footer className="bg-ink px-5 py-16 text-paper md:px-10">
+    <footer className="bg-ink px-5 py-16 pb-[max(4rem,env(safe-area-inset-bottom))] text-paper md:px-10">
       <div className="mx-auto flex max-w-6xl flex-col gap-12 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="font-display text-3xl">Amble</p>

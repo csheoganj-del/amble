@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useCart } from "../context/CartContext"
 
 const links = [
@@ -9,38 +10,66 @@ const links = [
 
 export default function Header() {
   const { count, setOpen } = useCart()
+  const [menu, setMenu] = useState(false)
 
   return (
-    <header className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center justify-between px-5 py-5 md:px-8">
-      <a
-        href="#top"
-        className="pointer-events-auto flex items-center gap-2.5 text-ink"
-      >
-        <LogoMark />
-        <span className="font-display text-[22px] leading-none tracking-tight">
-          Amble
-        </span>
-      </a>
+    <header className="pointer-events-none absolute inset-x-0 top-0 z-30 px-5 pt-[max(1.15rem,env(safe-area-inset-top))] pb-3 md:px-8 md:pt-5">
+      <div className="flex items-center justify-between">
+        <a
+          href="#top"
+          className="pointer-events-auto flex items-center gap-2.5 text-ink"
+        >
+          <LogoMark />
+          <span className="font-display text-[22px] leading-none tracking-tight">
+            Amble
+          </span>
+        </a>
 
-      <nav className="pointer-events-auto hidden items-center gap-8 md:flex">
-        {links.map((l) => (
-          <a
-            key={l.href}
-            href={l.href}
-            className="text-[11px] font-medium tracking-[0.22em] uppercase text-ink-soft/80 transition-colors hover:text-ink"
+        <nav className="pointer-events-auto hidden items-center gap-8 md:flex">
+          {links.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              className="text-[11px] font-medium tracking-[0.22em] uppercase text-ink-soft/80 transition-colors hover:text-ink"
+            >
+              {l.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="pointer-events-auto flex items-center gap-2">
+          <button
+            type="button"
+            className="rounded-full border border-ink/25 px-3 py-1.5 text-[11px] font-medium tracking-[0.18em] uppercase text-ink md:hidden"
+            aria-expanded={menu}
+            onClick={() => setMenu((v) => !v)}
           >
-            {l.label}
-          </a>
-        ))}
-      </nav>
+            {menu ? "Close" : "Menu"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="rounded-full border border-ink/25 px-4 py-1.5 text-[11px] font-medium tracking-[0.18em] uppercase text-ink transition-colors hover:bg-ink hover:text-paper"
+          >
+            Cart ({count})
+          </button>
+        </div>
+      </div>
 
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="pointer-events-auto rounded-full border border-ink/25 px-4 py-1.5 text-[11px] font-medium tracking-[0.18em] uppercase text-ink transition-colors hover:bg-ink hover:text-paper"
-      >
-        Cart ({count})
-      </button>
+      {menu && (
+        <nav className="pointer-events-auto mt-3 flex flex-wrap gap-x-5 gap-y-2 rounded-2xl bg-paper/80 px-4 py-3 backdrop-blur-md md:hidden">
+          {links.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              onClick={() => setMenu(false)}
+              className="py-1 text-[11px] font-medium tracking-[0.22em] uppercase text-ink"
+            >
+              {l.label}
+            </a>
+          ))}
+        </nav>
+      )}
     </header>
   )
 }

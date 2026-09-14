@@ -12,7 +12,7 @@ export default function CartDrawer() {
         onClick={() => setOpen(false)}
       />
       <aside
-        className={`fixed top-0 right-0 z-50 flex h-full w-full max-w-md flex-col bg-paper shadow-2xl transition-transform duration-500 ${
+        className={`fixed top-0 right-0 z-50 flex h-dvh w-full max-w-md flex-col bg-paper pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-2xl transition-transform duration-500 ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
         aria-hidden={!open}

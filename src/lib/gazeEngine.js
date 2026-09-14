@@ -1,6 +1,4 @@
 const FRAME_COUNT = 50
-const IDLE_MS = 9000
-const LERP_RATE = 16
 const FRAME_URL = (i) =>
   `/frames/sloth-${String(i).padStart(2, "0")}.webp`
 
@@ -15,6 +13,10 @@ async function loadFrame(index, onEach) {
 
 function clamp(n, a, b) {
   return Math.min(b, Math.max(a, n))
+}
+
+function isCoarsePointer() {
+  return window.matchMedia("(pointer: coarse)").matches
 }
 
 export function mountGazeEngine({ canvas, wrap, onProgress, onReady }) {
@@ -35,11 +37,20 @@ export function mountGazeEngine({ canvas, wrap, onProgress, onReady }) {
   let raf = 0
   let prev = performance.now()
   let destroyed = false
+  let coarse = isCoarsePointer()
 
-  const pointer = { x: 0.55, y: 0.45 }
+  function idleMs() {
+    return coarse ? 2800 : 9000
+  }
+
+  function lerpRate() {
+    return coarse ? 11 : 16
+  }
 
   function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    coarse = isCoarsePointer()
+    const dprCap = coarse ? 3 : 2
+    const dpr = Math.min(window.devicePixelRatio || 1, dprCap)
     const r = wrap.getBoundingClientRect()
     const w = Math.max(1, Math.round(r.width * dpr))
     const h = Math.max(1, Math.round(r.height * dpr))
@@ -57,21 +68,33 @@ export function mountGazeEngine({ canvas, wrap, onProgress, onReady }) {
     const cw = canvas.width
     const ch = canvas.height
     const ir = img.width / img.height
-    const isWide = wrap.getBoundingClientRect().width > 840
+    const box = wrap.getBoundingClientRect()
+    const isWide = box.width > 840
+    const isShort = !isWide && box.height < 740
 
-    // Desktop: sloth sits on the left, studio backdrop bleeds under the copy.
-    // Keep the head fully in frame — the source stills have studio paper above it.
-    const zoom = isWide ? 1.2 : 1.12
-    const dh = ch * zoom
-    const dw = dh * ir
-    const dx = isWide ? cw * 0.005 : (cw - dw) / 2
-    const dy = ch - dh + ch * (isWide ? 0.02 : 0.03)
+    let dw
+    let dh
+    let dx
+    let dy
+
+    if (isWide) {
+      const zoom = 1.2
+      dh = ch * zoom
+      dw = dh * ir
+      dx = cw * 0.005
+      dy = ch - dh + ch * 0.02
+    } else {
+      // Phone: sit high so the face stays above the copy overlay.
+      dw = cw * (isShort ? 0.88 : 0.94)
+      dh = dw / ir
+      dx = (cw - dw) / 2
+      dy = ch * (isShort ? 0.12 : 0.05)
+    }
 
     ctx.fillStyle = "#9eb4ba"
     ctx.fillRect(0, 0, cw, ch)
     ctx.drawImage(img, dx, dy, dw, dh)
 
-    // Stretch the studio paper to both edges so the type sits on a continuous sweep.
     if (dx > 0) {
       ctx.drawImage(img, 0, 0, 1, img.height, 0, dy, dx + 1, dh)
     }
@@ -95,12 +118,20 @@ export function mountGazeEngine({ canvas, wrap, onProgress, onReady }) {
     }
   }
 
-  function onPointer(e) {
-    pointer.x = clamp(e.clientX / window.innerWidth, 0, 1)
-    pointer.y = clamp(e.clientY / window.innerHeight, 0, 1)
-    target = pointer.x * (FRAME_COUNT - 1)
+  function applyPointer(x) {
+    const w = window.innerWidth || 1
+    target = clamp(x / w, 0, 1) * (FRAME_COUNT - 1)
     lastPtr = performance.now()
     idling = false
+  }
+
+  function onPointer(e) {
+    applyPointer(e.clientX)
+  }
+
+  function onTouch(e) {
+    const t = e.touches[0] || e.changedTouches[0]
+    if (t) applyPointer(t.clientX)
   }
 
   function tick(now) {
@@ -111,16 +142,16 @@ export function mountGazeEngine({ canvas, wrap, onProgress, onReady }) {
     if (!ready) return
 
     if (!reduced) {
-      if (now - lastPtr > IDLE_MS) {
+      if (now - lastPtr > idleMs()) {
         if (!idling) {
           idling = true
           const n = clamp((current / (FRAME_COUNT - 1)) * 2 - 1, -1, 1)
           idlePhase = Math.asin(n)
         }
-        idlePhase += dt * 0.42
+        idlePhase += dt * (coarse ? 0.55 : 0.42)
         target = (Math.sin(idlePhase) * 0.5 + 0.5) * (FRAME_COUNT - 1)
       }
-      const k = 1 - Math.exp(-dt * LERP_RATE)
+      const k = 1 - Math.exp(-dt * lerpRate())
       current += (target - current) * k
     }
 
@@ -140,6 +171,8 @@ export function mountGazeEngine({ canvas, wrap, onProgress, onReady }) {
 
   window.addEventListener("pointermove", onPointer, { passive: true })
   window.addEventListener("pointerdown", onPointer, { passive: true })
+  window.addEventListener("touchstart", onTouch, { passive: true })
+  window.addEventListener("touchmove", onTouch, { passive: true })
 
   let loaded = 0
   const jobs = Array.from({ length: FRAME_COUNT }, (_, i) =>
@@ -165,6 +198,8 @@ export function mountGazeEngine({ canvas, wrap, onProgress, onReady }) {
       cancelAnimationFrame(raf)
       window.removeEventListener("pointermove", onPointer)
       window.removeEventListener("pointerdown", onPointer)
+      window.removeEventListener("touchstart", onTouch)
+      window.removeEventListener("touchmove", onTouch)
       ro.disconnect()
     },
   }
