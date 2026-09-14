@@ -2,6 +2,9 @@
 
 Pointer-tracking canvas character for a slow-fashion workshop site.
 
+- **Live:** https://amble-two.vercel.app
+- **GitHub:** https://github.com/csheoganj-del/amble
+
 Move the cursor — the sloth turns to follow it across a 50-frame WebP sequence on a 2D canvas. After nine seconds idle, it looks around on its own. Zero WebGL. Zero GSAP.
 
 ## Stack
